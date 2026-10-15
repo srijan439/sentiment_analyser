@@ -1,6 +1,10 @@
 # Virtual environment
 venv/
 .venv/
+.venv*/
+venv*/
+env/
+ENV/
 
 # Python
 __pycache__/
@@ -8,10 +12,22 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+htmlcov/
+.coverage
+coverage.xml
 
 # Model weights (too large for git — upload to HuggingFace)
 model/*.bin
 model/*.safetensors
+model/*.pt
+model/*.pth
+model/*.ckpt
+model/checkpoint-*/
 model/pytorch_model.bin
 
 # Data cache
@@ -37,6 +53,16 @@ Thumbs.db
 .env.*
 !.env.example
 .aws/
+.ssh/
+.docker/
+.huggingface/
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
 
 # Terraform
 .terraform/
@@ -45,6 +71,7 @@ Thumbs.db
 *.tfplan
 crash.log
 terraform/*.tfvars
+terraform/*.tfvars.json
 !terraform/*.tfvars.example
 
 # Generated files
