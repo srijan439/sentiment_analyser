@@ -11,6 +11,7 @@ import pandas as pd
 import json
 import os
 import time
+from prometheus_client import Counter, Histogram, start_http_server
 
 # ─── Page Config ───
 st.set_page_config(
@@ -110,6 +111,22 @@ st.markdown("""
 MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model")
 MODEL_REPO = "Adit-11/bert-sentiment-analyzer"
 
+# Exposed on port 8000 for Prometheus. Streamlit reruns this module on every
+# interaction, so cache the server startup and metric objects across reruns.
+@st.cache_resource
+def metrics():
+    predictions = Counter(
+        "sentiment_predictions_total", "Completed sentiment predictions", ["sentiment"]
+    )
+    latency = Histogram(
+        "sentiment_prediction_duration_seconds", "Sentiment prediction duration"
+    )
+    start_http_server(8000)
+    return predictions, latency
+
+
+PREDICTIONS, PREDICTION_LATENCY = metrics()
+
 @st.cache_resource
 def load_model():
     """Load the fine-tuned model and tokenizer."""
@@ -158,6 +175,8 @@ def predict_sentiment(text, model, tokenizer, device):
     elapsed = time.time() - start
     
     label_map = {0: "Negative", 1: "Positive"}
+    PREDICTIONS.labels(sentiment=label_map[pred]).inc()
+    PREDICTION_LATENCY.observe(elapsed)
     return {
         "label": label_map[pred],
         "confidence": confidence,

@@ -1,0 +1,23 @@
+{
+  "uid": "sentiment-app",
+  "title": "Sentiment app",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Predictions per minute by sentiment",
+      "type": "timeseries",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "sum by (sentiment) (rate(sentiment_predictions_total[5m])) * 60", "legendFormat": "{{sentiment}}", "refId": "A"}]
+    },
+    {
+      "id": 2,
+      "title": "Prediction latency (seconds, p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(sentiment_prediction_duration_seconds_bucket[5m])))", "legendFormat": "p95", "refId": "A"}]
+    }
+  ]
+}

@@ -86,6 +86,70 @@ Create and activate a virtual environment with `python3 -m venv .venv` and `sour
 
 Hosted app: https://huggingface.co/spaces/Adit-11/bert-sentiment-analyzer
 
+## Deploy the existing Docker image to AWS EC2 with Terraform
+
+This beginner deployment creates one EC2 instance and one security group. EC2 installs Docker, pulls your public Docker Hub image, and starts Streamlit on port 8501. SSH is restricted to your public IPv4 address.
+
+You need AWS CLI credentials with EC2 permissions, Terraform 1.5 or newer, and a public Docker Hub image. The default instance is `t3.large` to provide memory for the model. EC2 usage and its 30 GB encrypted disk incur AWS charges while running; stop or destroy the instance when you are finished.
+
+### Configure values
+
+Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and replace the Docker Hub username/image, your SSH IP, and key pair name. Do not commit `terraform.tfvars` or any private key.
+
+```powershell
+Copy-Item terraform/terraform.tfvars.example terraform/terraform.tfvars
+```
+
+### Create and deploy
+
+From the project root:
+
+```powershell
+terraform -chdir=terraform init
+terraform -chdir=terraform fmt
+terraform -chdir=terraform validate
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+```
+
+Review the plan before applying. Terraform outputs the public IP and application URL. Open the URL in a browser once EC2 has finished its first-boot Docker setup.
+
+### Clean up
+
+When finished, remove the EC2 instance and security group with:
+
+```powershell
+terraform -chdir=terraform destroy
+```
+
+This deletes Terraform-managed infrastructure. The local Terraform state file tracks those resources and should be kept until cleanup is complete.
+
+## Run the monitoring stack
+
+Install Docker Compose v2, set a Grafana password, then start the app, Prometheus, and Grafana:
+
+```powershell
+$env:GRAFANA_ADMIN_PASSWORD = "choose-a-strong-password"
+docker compose up --build -d
+```
+
+Open the app at http://localhost:8501, Prometheus at http://localhost:9090, and Grafana at http://localhost:3000 (login `admin` with the password above). In Grafana, add Prometheus as a data source at `http://prometheus:9090`. Metrics are exposed at http://localhost:8000/metrics; prediction counters and latency histograms appear after predictions are made. Stop the stack with `docker compose down`.
+
+## Run checks and deploy to Kubernetes
+
+Run the project checks with `python -m pip install pytest` and `python -m pytest -q`.
+
+For a local Minikube deployment, build and load the image, then apply the manifests:
+
+```powershell
+docker build -t sentiment-test:latest .
+minikube image load sentiment-test:latest
+kubectl apply -f k8s/
+minikube service sentiment-test
+```
+
+The HPA requires the Kubernetes Metrics Server and CPU resource metrics. For Jenkins, configure a Docker Hub username/password credential named `dockerhub-credentials`, set `DOCKERHUB_REPOSITORY` to your image namespace and repository, and optionally enable `DEPLOY_TO_KUBERNETES` when the Jenkins agent has the intended cluster context configured.
+
 ## 📝 License
 
 MIT

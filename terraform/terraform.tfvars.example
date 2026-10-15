@@ -1,0 +1,5 @@
+aws_region      = "us-east-1"
+instance_type   = "t3.large"
+docker_image    = "YOUR_DOCKERHUB_USERNAME/sentiment-bert:latest"
+key_pair_name   = "nimbus-key"
+ssh_allowed_cidr = "YOUR_PUBLIC_IPV4/32"

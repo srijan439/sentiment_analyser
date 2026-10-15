@@ -45,6 +45,8 @@ Thumbs.db
 *.tfstate.*
 *.tfplan
 crash.log
+terraform/*.tfvars
+!terraform/*.tfvars.example
 
 # Generated files
 uploads/
