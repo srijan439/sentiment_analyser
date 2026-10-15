@@ -15,7 +15,6 @@ model/*.safetensors
 model/pytorch_model.bin
 
 # Data cache
-data/*.cache
 .cache/
 
 # IDE

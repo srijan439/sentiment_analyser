@@ -1,5 +1,5 @@
+from io import BytesIO
 from huggingface_hub import HfApi
-import os
 
 api = HfApi()
 
@@ -23,12 +23,9 @@ pinned: false
 ---
 """
 
-# Read the Hugging Face specific README and prepend frontmatter
+# Read the project README and prepend Hugging Face Space metadata.
 with open("README.md", "r", encoding="utf-8") as f:
     existing_readme = f.read()
-
-with open("HF_README.md", "w", encoding="utf-8") as f:
-    f.write(frontmatter + existing_readme)
 
 print("Uploading files...")
 api.upload_folder(
@@ -38,9 +35,9 @@ api.upload_folder(
     allow_patterns=["app/**", "model/**", "requirements.txt"],
 )
 
-# Upload the HF_README.md specifically as README.md
+# Upload the generated Space README without creating a temporary project file.
 api.upload_file(
-    path_or_fileobj="HF_README.md",
+    path_or_fileobj=BytesIO((frontmatter + existing_readme).encode("utf-8")),
     path_in_repo="README.md",
     repo_id=repo_id,
     repo_type="space"

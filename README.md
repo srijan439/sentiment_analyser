@@ -19,13 +19,18 @@ Input Text → BERT Tokenizer → BERT Model → Classification Head → Sentime
 ## 📁 Project Structure
 
 ```
-Sentiment/
-├── data/           # Dataset scripts & exploration
-├── model/          # Saved model weights & tokenizer
-├── app/            # Streamlit web application
+cinematic-sentiment-bert-main/
+├── app/            # Streamlit application and inference
+├── k8s/            # Kubernetes deployment, service, and autoscaler
+├── model/          # Model configuration, tokenizer, and metrics
+├── monitoring/     # Prometheus and Grafana configuration
+├── terraform/      # AWS infrastructure
+├── tests/          # Basic project checks
 ├── train.py        # Model training script
-├── requirements.txt
-└── README.md
+├── deploy_hf.py    # Hugging Face Spaces deployment
+├── docker-compose.yml
+├── Dockerfile
+└── Jenkinsfile
 ```
 
 ## 🛠️ Tech Stack
@@ -46,10 +51,6 @@ Sentiment/
 | Recall    | 91.47% |
 
 *Model was fine-tuned for 3 epochs in ~110 minutes on an Apple Silicon MPS.*
-
-## 📸 Screenshots
-
-![Sentiment Analysis Web App](data/app_screenshot.png)
 
 ## Run Locally on Windows
 
@@ -133,7 +134,7 @@ $env:GRAFANA_ADMIN_PASSWORD = "choose-a-strong-password"
 docker compose up --build -d
 ```
 
-Open the app at http://localhost:8501, Prometheus at http://localhost:9090, and Grafana at http://localhost:3000 (login `admin` with the password above). In Grafana, add Prometheus as a data source at `http://prometheus:9090`. Metrics are exposed at http://localhost:8000/metrics; prediction counters and latency histograms appear after predictions are made. Stop the stack with `docker compose down`.
+Open the app at http://localhost:8501, Prometheus at http://localhost:9090, and Grafana at http://localhost:3000 (login `admin` with the password above). Grafana's Prometheus data source and sentiment dashboard are provisioned automatically. Metrics are exposed at http://localhost:8000/metrics; prediction counters and latency histograms appear after predictions are made. Stop the stack with `docker compose down`.
 
 ## Run checks and deploy to Kubernetes
 
