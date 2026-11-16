@@ -64,16 +64,6 @@ secrets/
 id_rsa
 id_ed25519
 
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfplan
-crash.log
-terraform/*.tfvars
-terraform/*.tfvars.json
-!terraform/*.tfvars.example
-
 # Generated files
 uploads/
 outputs/

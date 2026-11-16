@@ -1,45 +1,59 @@
 # 🎭 BERT Sentiment Analyzer
 
-A deep learning-powered sentiment analysis web application that classifies text as **Positive** or **Negative** using a fine-tuned BERT transformer model.
+A deep learning-powered sentiment analysis web application that classifies text as **Positive** or **Negative** using a fine-tuned DistilBERT transformer model with an interactive Cyber-Glass web interface.
 
 ## 🚀 Features
 
-- **Fine-tuned BERT** on 50K IMDB movie reviews
-- **Real-time inference** with confidence scores
-- **Batch analysis** — analyze multiple texts at once
-- **Interactive Streamlit UI** with color-coded results
-- **Download results** as CSV
+- **Fine-tuned DistilBERT** on 50K IMDB movie reviews (91.22% accuracy, 91.24% F1)
+- **FastAPI Backend** with real-time async inference and batch processing endpoints
+- **Cyber-Glass Frontend** — modern interactive UI with live confidence metrics, saliency highlights, audio feedback, and CSV export
+- **Hardware Acceleration** — auto-detects Apple Silicon (MPS), NVIDIA CUDA, or CPU fallback
+- **Model Explainability** — word salience analysis highlighting influential tokens
 
 ## 🏗️ Architecture
 
 ```
-Input Text → BERT Tokenizer → BERT Model → Classification Head → Sentiment + Confidence
+User Input (Web UI)
+        ↓
+FastAPI Backend (app/main.py)
+        ↓
+DistilBERT Tokenizer & PyTorch Model (model/)
+        ↓
+Classification Head & Saliency Computation
+        ↓
+JSON Response → Cyber-Glass UI Display
 ```
 
 ## 📁 Project Structure
 
 ```
-cinematic-sentiment-bert-main/
-├── app/            # Streamlit application and inference
-├── k8s/            # Kubernetes deployment, service, and autoscaler
-├── model/          # Model configuration, tokenizer, and metrics
-├── monitoring/     # Prometheus and Grafana configuration
-├── terraform/      # AWS infrastructure
-├── tests/          # Basic project checks
-├── train.py        # Model training script
-├── deploy_hf.py    # Hugging Face Spaces deployment
-├── docker-compose.yml
-├── Dockerfile
-└── Jenkinsfile
+sentiment_analyser/
+├── app/
+│   ├── app.py              # Application entry point (Uvicorn runner)
+│   ├── main.py             # FastAPI backend API & static file serving
+│   └── static/             # Modern Cyber-Glass frontend (HTML, CSS, JS)
+│       ├── css/
+│       │   └── style.css   # Cyber-Glass styling
+│       ├── js/
+│       │   ├── app.js      # Frontend interaction logic & API client
+│       │   └── audio.js    # Sound effects & synthesis
+│       └── index.html      # Single-page web interface
+├── model/                  # Model configuration, tokenizer, and metrics
+├── tests/                  # Project structure and verification tests
+├── train.py                # Model fine-tuning script
+├── deploy_hf.py            # Hugging Face Spaces deployment script
+├── requirements.txt        # Runtime dependencies (FastAPI, PyTorch, Transformers)
+├── requirements-train.txt  # Additional dependencies for training
+└── README.md
 ```
 
 ## 🛠️ Tech Stack
 
-- **Model**: BERT (bert-base-uncased) / DistilBERT
-- **Framework**: PyTorch + HuggingFace Transformers
-- **Dataset**: IMDB Movie Reviews (50K samples)
-- **UI**: Streamlit
-- **Deployment**: HuggingFace Spaces
+- **Model**: DistilBERT (`distilbert-base-uncased`)
+- **Machine Learning**: PyTorch, Hugging Face Transformers, Datasets
+- **Backend**: FastAPI, Uvicorn, Pydantic
+- **Frontend**: HTML5, Modern CSS (Cyber-Glass theme), JavaScript (ES6+)
+- **Dataset**: IMDB Movie Reviews (50,000 samples)
 
 ## 📊 Results
 
@@ -50,106 +64,73 @@ cinematic-sentiment-bert-main/
 | Precision | 91.01% |
 | Recall    | 91.47% |
 
-*Model was fine-tuned for 3 epochs in ~110 minutes on an Apple Silicon MPS.*
+*Model fine-tuned for 3 epochs on Apple Silicon MPS.*
 
-## Run Locally on Windows
+---
 
-Use Python 3.10 or 3.11. Open PowerShell in the project folder (the folder containing `requirements.txt`) and run:
+## 💻 Quick Start / Local Setup
 
+### 1. Prerequisites
+- Python 3.10, 3.11, or 3.12
+- `git`
+
+### 2. Clone and Setup Environment
+
+#### macOS / Linux
+```bash
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### Windows (PowerShell)
 ```powershell
-# Create and activate an isolated environment
+# Create and activate virtual environment
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# Install the project dependencies
+# Install dependencies
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-
-# Start the Streamlit app
-python -m streamlit run app/app.py
 ```
 
-Open the local URL printed in the terminal, usually http://localhost:8501. On its first start, the app downloads the fine-tuned model weights from Hugging Face (about 268 MB), so an internet connection is required. Later starts reuse the downloaded file in `model/`.
+### 3. Run the Application
 
-If PowerShell blocks environment activation, run this once in that terminal and activate again:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```bash
+python app/app.py
 ```
 
-To leave the virtual environment, run `deactivate`. To start the app again later, open PowerShell in the project folder, activate `.venv` as above, then run `python -m streamlit run app/app.py`.
+Open your browser at **http://localhost:8501**.
 
-The model is already fine-tuned; you do not need to run `train.py` to use the app. Training is optional and downloads the IMDB dataset.
+> **Note:** On first startup, if local weights are not present in `model/`, the app will automatically download the fine-tuned weights (~268 MB) from Hugging Face. Subsequent runs reuse the cached weights locally.
 
-## Run on macOS or Linux
+---
 
-Create and activate a virtual environment with `python3 -m venv .venv` and `source .venv/bin/activate`, then install with `python -m pip install -r requirements.txt` and launch with `python -m streamlit run app/app.py`.
+## 🧪 Running Tests
 
-Hosted app: https://huggingface.co/spaces/Adit-11/bert-sentiment-analyzer
+To run project verification tests:
 
-## Deploy the existing Docker image to AWS EC2 with Terraform
-
-This beginner deployment creates one EC2 instance and one security group. EC2 installs Docker, pulls your public Docker Hub image, and starts Streamlit on port 8501. SSH is restricted to your public IPv4 address.
-
-You need AWS CLI credentials with EC2 permissions, Terraform 1.5 or newer, and a public Docker Hub image. The default instance is `t3.large` to provide memory for the model. EC2 usage and its 30 GB encrypted disk incur AWS charges while running; stop or destroy the instance when you are finished.
-
-### Configure values
-
-Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and replace the Docker Hub username/image, your SSH IP, and key pair name. Do not commit `terraform.tfvars` or any private key.
-
-```powershell
-Copy-Item terraform/terraform.tfvars.example terraform/terraform.tfvars
+```bash
+pip install pytest
+pytest -q
 ```
 
-### Create and deploy
+---
 
-From the project root:
+## 🎓 Model Training (Optional)
 
-```powershell
-terraform -chdir=terraform init
-terraform -chdir=terraform fmt
-terraform -chdir=terraform validate
-terraform -chdir=terraform plan
-terraform -chdir=terraform apply
+The model is already pre-trained and ready to use. If you wish to retrain or fine-tune from scratch on the IMDB dataset:
+
+```bash
+pip install -r requirements-train.txt
+python train.py
 ```
 
-Review the plan before applying. Terraform outputs the public IP and application URL. Open the URL in a browser once EC2 has finished its first-boot Docker setup.
-
-### Clean up
-
-When finished, remove the EC2 instance and security group with:
-
-```powershell
-terraform -chdir=terraform destroy
-```
-
-This deletes Terraform-managed infrastructure. The local Terraform state file tracks those resources and should be kept until cleanup is complete.
-
-## Run the monitoring stack
-
-Install Docker Compose v2, set a Grafana password, then start the app, Prometheus, and Grafana:
-
-```powershell
-$env:GRAFANA_ADMIN_PASSWORD = "choose-a-strong-password"
-docker compose up --build -d
-```
-
-Open the app at http://localhost:8501, Prometheus at http://localhost:9090, and Grafana at http://localhost:3000 (login `admin` with the password above). Grafana's Prometheus data source and sentiment dashboard are provisioned automatically. Metrics are exposed at http://localhost:8000/metrics; prediction counters and latency histograms appear after predictions are made. Stop the stack with `docker compose down`.
-
-## Run checks and deploy to Kubernetes
-
-Run the project checks with `python -m pip install pytest` and `python -m pytest -q`.
-
-For a local Minikube deployment, build and load the image, then apply the manifests:
-
-```powershell
-docker build -t sentiment-test:latest .
-minikube image load sentiment-test:latest
-kubectl apply -f k8s/
-minikube service sentiment-test
-```
-
-The HPA requires the Kubernetes Metrics Server and CPU resource metrics. For Jenkins, configure a Docker Hub username/password credential named `dockerhub-credentials`, set `DOCKERHUB_REPOSITORY` to your image namespace and repository, and optionally enable `DEPLOY_TO_KUBERNETES` when the Jenkins agent has the intended cluster context configured.
+---
 
 ## 📝 License
 

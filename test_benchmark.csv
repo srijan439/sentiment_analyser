@@ -1,0 +1,16 @@
+id,category,text,expected_sentiment,test_objective
+1,Strong Positive,"An absolute cinematic masterpiece with breathtaking direction and career-best performances.",Positive,Verify high confidence on unambiguous superlative adjectives
+2,Strong Negative,"An unmitigated disaster with a nonsensical script, wooden acting, and atrocious pacing.",Negative,Verify high confidence on severe negative critiques
+3,Mixed Sentiments,"The cinematography and musical score were stunning, but the plot was disjointed and flat.",Negative/Mixed,Test contrastive conjunction 'but' where second clause dominates
+4,Sarcasm / Irony,"Oh brilliant, another two hours of predictable CGI explosions. Exactly what cinema needed.",Negative,Test contextual sarcasm detection where positive words mask criticism
+5,Expectation Flip,"I walked into the theater expecting trash, but I was pleasantly surprised by how heartfelt it was.",Positive,Test narrative twist from negative expectation to positive reality
+6,Double Negation,"I honestly cannot believe how not bad this turned out to be!",Positive,Test double negation resolving to moderate positive polarity
+7,Customer Service Positive,"The customer support team resolved my billing issue in under three minutes with great courtesy.",Positive,Test domain shift to SaaS / support sentiment
+8,Customer Service Negative,"The food was cold, the waiter was insolent, and the bill had unexplained extra charges.",Negative,Test multi-attribute negative customer review
+9,Informal Slang,"lowkey one of the best releases of the entire year fr.",Positive,Test modern internet slang and shorthand ('lowkey', 'fr')
+10,Understated Negative,"meh.",Negative/Neutral,Test extreme low token count / colloquial dismissal
+11,Inverted Idiom,"The camera work failed to disappoint, delivering mesmerizing visuals across every single frame.",Positive,Test complex negative idiom ('failed to disappoint' = succeeded)
+12,Technical Critique,"Horrible battery life and constant thermal throttling make this laptop unusable for real work.",Negative,Test hardware / tech review criticism
+13,Ambivalent Neutral,"It was okay I guess, neither particularly memorable nor offensive.",Neutral/Mixed,Test low-confidence ambivalence detection
+14,Superlative Praise,"A triumphant tour de force that will undoubtedly be remembered for years to come.",Positive,Test vocabulary richness on literary accolades
+15,Catastrophic Critique,"Don't walk, run away from this movie. Zero redeemable qualities.",Negative,Test idiomatic warning expressions

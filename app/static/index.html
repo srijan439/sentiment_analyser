@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SENTIMENT.AI — Enterprise sentiment analysis platform powered by fine-tuned DistilBERT with real-time inference, batch processing, and explainable AI.">
+  <title>SENTIMENT.AI — Enterprise Sentiment Intelligence</title>
+
+  <!-- Typography: Inter, Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" onerror="this.onerror=null;this.href='favicon.svg';">
+
+  <!-- Application Stylesheet with cache busting & file protocol fallback -->
+  <link rel="stylesheet" href="/static/css/style.css?v=2.4" onerror="this.onerror=null;this.href='css/style.css?v=2.4';">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <!-- Brand Identity -->
+      <div class="brand-group">
+        <a href="/" class="brand-link" aria-label="SENTIMENT.AI Dashboard">
+          <div class="brand-icon-wrapper">
+            <svg class="brand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="brand-title">SENTIMENT<span class="brand-accent">.AI</span></span>
+        </a>
+        <span class="brand-version-badge">DistilBERT v2.0</span>
+      </div>
+
+      <!-- Center Status Pill -->
+      <div class="header-center">
+        <div class="status-indicator-pill" id="status-pill" title="Fine-tuned DistilBERT sequence classifier ready">
+          <span class="status-dot"></span>
+          <span class="status-text">Engine Online</span>
+          <span class="status-sep">·</span>
+          <span class="status-meta">91.2% Test Acc</span>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="header-actions">
+        <a href="/docs" target="_blank" rel="noopener noreferrer" class="nav-action-btn" title="API Swagger Documentation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>API Docs</span>
+        </a>
+
+        <button class="icon-toggle-btn" id="sound-toggle-btn" aria-label="Toggle Sound Feedback" title="Toggle audio feedback">
+          <svg class="icon-svg sound-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+        </button>
+
+        <button class="icon-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Light / Dark theme">
+          <svg class="icon-svg theme-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <div class="user-chip" title="Active Model Environment">
+          <span class="user-avatar">AI</span>
+          <span class="user-label">Production</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Secondary Bar: Segmented Navigation -->
+  <div class="subnav-bar">
+    <div class="subnav-container">
+      <nav class="segmented-control" role="tablist" aria-label="Workspace views">
+        <button class="segment-tab active" data-tab="single" role="tab" aria-selected="true" aria-controls="tab-single">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Single Analysis</span>
+        </button>
+
+        <button class="segment-tab" data-tab="batch" role="tab" aria-selected="false" aria-controls="tab-batch">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          <span>Batch Processing</span>
+        </button>
+
+        <button class="segment-tab" data-tab="insights" role="tab" aria-selected="false" aria-controls="tab-insights">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 20V10"></path>
+            <path d="M12 20V4"></path>
+            <path d="M6 20v-6"></path>
+          </svg>
+          <span>Model Insights</span>
+        </button>
+
+        <button class="segment-tab" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>History</span>
+          <span class="tab-counter-pill" id="history-counter">0</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Primary Workspace Content -->
+  <main class="app-workspace">
+    <div class="workspace-container">
+
+      <!-- ============================================================ -->
+      <!-- TAB 1: Single Text Analysis                                   -->
+      <!-- ============================================================ -->
+      <section id="tab-single" class="tab-panel active" role="tabpanel">
+        <div class="two-column-workspace">
+
+          <!-- Left Column: Text Analysis Input Panel -->
+          <div class="panel-card analysis-input-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h2 class="panel-title">Analyze Sentiment</h2>
+                <p class="panel-subtitle">Evaluate natural language sentiment polarity, probability distribution, and token salience.</p>
+              </div>
+
+              <!-- Live Analysis Toggle -->
+              <label class="toggle-switch-wrapper" title="Compute sentiment continuously as you type">
+                <span class="toggle-label">Live Typing</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="live-mode-toggle">
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Professional Writing Editor -->
+            <div class="editor-surface">
+              <textarea
+                id="single-text"
+                class="editor-textarea"
+                placeholder="Enter review, social post, or feedback text here (e.g. 'The cinematography was breathtaking, but the plot fell apart in the third act...')"
+                aria-label="Text to evaluate"
+                spellcheck="true"
+              ></textarea>
+              <div class="editor-statusbar">
+                <div class="statusbar-counts">
+                  <span id="char-count">0 characters</span>
+                  <span class="statusbar-divider">·</span>
+                  <span id="word-count">0 words</span>
+                </div>
+                <div class="statusbar-shortcut">
+                  <span>Press</span>
+                  <kbd>⌘</kbd> + <kbd>↵</kbd>
+                  <span>to analyze</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Example Presets Section -->
+            <div class="presets-container">
+              <div class="section-label-row">
+                <span class="section-label">EXAMPLE PRESETS</span>
+                <span class="section-hint">Click any benchmark to load & analyze</span>
+              </div>
+              <div class="presets-grid">
+                <button type="button" class="preset-btn" data-preset="positive" data-text="An absolute cinematic masterpiece. The direction, emotional depth, and performances were truly transcendent.">
+                  <span class="preset-dot pos"></span>
+                  <span class="preset-name">Highly Positive</span>
+                </button>
+
+                <button type="button" class="preset-btn" data-preset="criticism" data-text="An unmitigated disaster with a nonsensical script, wooden acting, and terrible pacing throughout.">
+                  <span class="preset-dot neg"></span>
+                  <span class="preset-name">Harsh Criticism</span>
+                </button>
+
+                <button type="button" class="preset-btn" data-preset="sarcasm" data-text="Oh brilliant, another two hours of clunky CGI and predictable tropes. Exactly what cinema was waiting for.">
+                  <span class="preset-dot neutral"></span>
+                  <span class="preset-name">Sarcastic Praise</span>
+                </button>
+
+                <button type="button" class="preset-btn" data-preset="mixed" data-text="The cinematography and score are breathtaking, but the disjointed narrative and flat characters hold it back.">
+                  <span class="preset-dot neutral"></span>
+                  <span class="preset-name">Mixed Feelings</span>
+                </button>
+
+                <button type="button" class="preset-btn" data-preset="negative" data-text="I felt genuinely exhausted and disappointed. Complete waste of incredible source material and talent.">
+                  <span class="preset-dot neg"></span>
+                  <span class="preset-name">Strongly Negative</span>
+                </button>
+
+                <button type="button" class="preset-btn" data-preset="slang" data-text="Honestly didn't expect much, but it was lowkey fire. Best release of the entire summer fr.">
+                  <span class="preset-dot pos"></span>
+                  <span class="preset-name">Casual Slang</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Controls Row -->
+            <div class="panel-actions-row">
+              <button id="analyze-btn" class="btn-primary" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Analyze Sentiment</span>
+                <kbd class="btn-kbd">⌘↵</kbd>
+              </button>
+
+              <button id="clear-btn" class="btn-secondary" type="button" title="Clear input text (Esc)">
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Analysis Results Panel -->
+          <div class="panel-card analysis-results-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h2 class="panel-title">Inference Results</h2>
+                <p class="panel-subtitle">Probabilistic classification breakdown & explainability.</p>
+              </div>
+              <div id="results-meta-pill" class="meta-status-tag" style="display:none;">
+                <span class="meta-tag-dot"></span>
+                <span id="results-latency-text">0 ms</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Result Card Body -->
+            <div id="result-container" class="results-viewport">
+              
+              <!-- Refined Empty State -->
+              <div class="empty-state-view">
+                <div class="empty-graphic">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="8" width="40" height="32" rx="8" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
+                    <path d="M12 24C15 20 18 28 21 24C24 20 27 28 30 24C33 20 36 26 36 24" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="21" cy="24" r="2" fill="var(--accent)"/>
+                    <circle cx="30" cy="24" r="2" fill="var(--positive)"/>
+                  </svg>
+                </div>
+                <h3 class="empty-title">Awaiting Text Input</h3>
+                <p class="empty-description">
+                  Enter text in the editor or select a preset benchmark on the left to run inference with the fine-tuned DistilBERT transformer.
+                </p>
+                <div class="model-spec-chips">
+                  <span class="spec-chip">DistilBERT-Base</span>
+                  <span class="spec-chip">66.3M Parameters</span>
+                  <span class="spec-chip">Sub-15ms Latency</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TAB 2: Batch Processing                                       -->
+      <!-- ============================================================ -->
+      <section id="tab-batch" class="tab-panel" role="tabpanel">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <h2 class="panel-title">Batch Text Classification</h2>
+              <p class="panel-subtitle">Process hundreds of text entries concurrently with high-throughput batching.</p>
+            </div>
+          </div>
+
+          <!-- Upload Drop Zone -->
+          <div class="upload-dropzone" id="drop-zone" tabindex="0" role="button" aria-label="Upload TXT or CSV file">
+            <div class="dropzone-icon-wrap">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div class="dropzone-content">
+              <p class="dropzone-title">Upload a <code>.txt</code> or <code>.csv</code> file, or drag and drop</p>
+              <p class="dropzone-hint">One review or sentence per line (supported up to 500 lines per batch)</p>
+            </div>
+            <input type="file" id="batch-file" accept=".txt,.csv" style="display:none;" aria-hidden="true">
+          </div>
+
+          <!-- Direct Multiline Input -->
+          <div class="batch-direct-entry">
+            <label for="batch-text" class="section-label">OR PASTE MULTIPLE LINES DIRECTLY</label>
+            <div class="editor-surface">
+              <textarea
+                id="batch-text"
+                class="editor-textarea batch-textarea"
+                placeholder="Line 1: Excellent quality and prompt shipping!&#10;Line 2: Disappointed with the customer support response.&#10;Line 3: An absolute masterpiece of modern cinema from start to finish."
+                rows="6"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Run Batch Button -->
+          <div class="panel-actions-row">
+            <button id="batch-analyze-btn" class="btn-primary" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+              <span>Execute Batch Analysis</span>
+            </button>
+          </div>
+
+          <!-- Batch Results Section -->
+          <div id="batch-results-wrapper" class="batch-results-container" style="display:none;">
+            <div class="batch-results-header">
+              <div>
+                <h3 class="panel-title" style="font-size:16px;">Batch Analytics Summary</h3>
+                <p class="panel-subtitle">Aggregated distribution across all evaluated rows.</p>
+              </div>
+              <button id="export-csv-btn" class="btn-secondary" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Export CSV</span>
+              </button>
+            </div>
+
+            <!-- Aggregated KPI Cards -->
+            <div class="batch-kpi-grid">
+              <div class="kpi-metric-card">
+                <span class="kpi-label">TOTAL PROCESSED</span>
+                <span class="kpi-number" id="batch-stat-total">0</span>
+              </div>
+              <div class="kpi-metric-card positive">
+                <span class="kpi-label">POSITIVE CLASSIFICATIONS</span>
+                <span class="kpi-number" id="batch-stat-pos">0</span>
+              </div>
+              <div class="kpi-metric-card negative">
+                <span class="kpi-label">NEGATIVE CLASSIFICATIONS</span>
+                <span class="kpi-number" id="batch-stat-neg">0</span>
+              </div>
+              <div class="kpi-metric-card">
+                <span class="kpi-label">EXECUTION RUNTIME</span>
+                <span class="kpi-number" id="batch-stat-time">0ms</span>
+              </div>
+            </div>
+
+            <!-- Table Filter Toolbar -->
+            <div class="table-filter-toolbar">
+              <div class="filter-pills-group">
+                <button type="button" class="filter-pill active batch-filter-btn" data-filter="all">All Results</button>
+                <button type="button" class="filter-pill batch-filter-btn" data-filter="positive">Positive Only</button>
+                <button type="button" class="filter-pill batch-filter-btn" data-filter="negative">Negative Only</button>
+              </div>
+            </div>
+
+            <!-- Table Surface -->
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Text Snippet</th>
+                    <th style="width: 140px;">Sentiment</th>
+                    <th style="width: 110px;">Confidence</th>
+                    <th style="width: 90px;">Pos %</th>
+                    <th style="width: 90px;">Neg %</th>
+                  </tr>
+                </thead>
+                <tbody id="batch-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TAB 3: Model Insights & Architecture                          -->
+      <!-- ============================================================ -->
+      <section id="tab-insights" class="tab-panel" role="tabpanel">
+        
+        <!-- 4 Hero Metrics -->
+        <div class="insights-hero-grid">
+          <div class="hero-kpi-card">
+            <span class="hero-kpi-tag">TEST ACCURACY</span>
+            <div class="hero-kpi-val" id="info-accuracy">91.22%</div>
+            <p class="hero-kpi-desc">Benchmarked on 25,000 holdout IMDB test reviews</p>
+          </div>
+
+          <div class="hero-kpi-card">
+            <span class="hero-kpi-tag">F1-SCORE</span>
+            <div class="hero-kpi-val" id="info-f1">91.24%</div>
+            <p class="hero-kpi-desc">Harmonic balance of precision and recall</p>
+          </div>
+
+          <div class="hero-kpi-card">
+            <span class="hero-kpi-tag">PRECISION</span>
+            <div class="hero-kpi-val" id="info-precision">91.01%</div>
+            <p class="hero-kpi-desc">Low false-positive classification rate</p>
+          </div>
+
+          <div class="hero-kpi-card">
+            <span class="hero-kpi-tag">RECALL</span>
+            <div class="hero-kpi-val" id="info-recall">91.47%</div>
+            <p class="hero-kpi-desc">High capture rate for true sentiment classes</p>
+          </div>
+        </div>
+
+        <!-- 2 Analytical Deep-dive Panels -->
+        <div class="two-column-workspace" style="margin-top: 24px;">
+          
+          <!-- Architecture Card -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h3 class="panel-title">Model Architecture & Pipeline</h3>
+                <p class="panel-subtitle">Fine-tuned sequence classification pipeline specifications.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-step-list">
+              <div class="pipeline-step">
+                <div class="pipeline-step-num">01</div>
+                <div class="pipeline-step-info">
+                  <h4 class="pipeline-step-title">WordPiece Tokenizer</h4>
+                  <p class="pipeline-step-desc">Transforms raw unicode text into subword token IDs. Max sequence length: 256. Vocabulary size: 30,522 tokens.</p>
+                </div>
+              </div>
+
+              <div class="pipeline-step">
+                <div class="pipeline-step-num">02</div>
+                <div class="pipeline-step-info">
+                  <h4 class="pipeline-step-title">DistilBERT Transformer Encoder</h4>
+                  <p class="pipeline-step-desc"><span id="info-params">66.3M</span> parameters across 6 Transformer encoder blocks with 12 multi-head self-attention mechanisms.</p>
+                </div>
+              </div>
+
+              <div class="pipeline-step">
+                <div class="pipeline-step-num">03</div>
+                <div class="pipeline-step-info">
+                  <h4 class="pipeline-step-title">Pooled Representation</h4>
+                  <p class="pipeline-step-desc">Extracts the 768-dimensional contextual hidden state vector from the special <code>[CLS]</code> classification token.</p>
+                </div>
+              </div>
+
+              <div class="pipeline-step">
+                <div class="pipeline-step-num">04</div>
+                <div class="pipeline-step-info">
+                  <h4 class="pipeline-step-title">Classification Head & Softmax</h4>
+                  <p class="pipeline-step-desc">Applies 0.2 dropout, dense linear layer (768 → 2 logits), and softmax normalization to produce final probabilities.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="acceleration-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+              </svg>
+              <span>Hardware Acceleration:</span>
+              <strong id="info-device">Apple Silicon (MPS)</strong>
+            </div>
+          </div>
+
+          <!-- Confusion Matrix Card -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h3 class="panel-title">Evaluation Confusion Matrix</h3>
+                <p class="panel-subtitle">Holdout performance over 25,000 annotated evaluations.</p>
+              </div>
+            </div>
+
+            <div class="matrix-wrapper">
+              <table class="confusion-matrix-table">
+                <thead>
+                  <tr>
+                    <th class="matrix-corner">Actual \ Pred</th>
+                    <th>Predicted Negative</th>
+                    <th>Predicted Positive</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>Actual Negative</th>
+                    <td class="matrix-cell tn">
+                      <span class="matrix-count" id="cm-tn">11,370</span>
+                      <span class="matrix-sub">True Negatives</span>
+                    </td>
+                    <td class="matrix-cell fp">
+                      <span class="matrix-count" id="cm-fp">1,130</span>
+                      <span class="matrix-sub">False Positives</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Actual Positive</th>
+                    <td class="matrix-cell fn">
+                      <span class="matrix-count" id="cm-fn">1,066</span>
+                      <span class="matrix-sub">False Negatives</span>
+                    </td>
+                    <td class="matrix-cell tp">
+                      <span class="matrix-count" id="cm-tp">11,434</span>
+                      <span class="matrix-sub">True Positives</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="matrix-footnote">
+              Fine-tuned for 3 epochs with AdamW (lr=2e-5) on an Apple Silicon MPS hardware accelerator.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TAB 4: History                                                -->
+      <!-- ============================================================ -->
+      <section id="tab-history" class="tab-panel" role="tabpanel">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <h2 class="panel-title">Inference History</h2>
+              <p class="panel-subtitle">Locally stored logs of your recent single and batch sentiment evaluations.</p>
+            </div>
+
+            <div class="header-button-group">
+              <button id="export-history-btn" class="btn-secondary" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Export JSON</span>
+              </button>
+
+              <button id="clear-history-btn" class="btn-secondary" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Clear History</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- History Item List -->
+          <div id="history-list" class="history-items-container"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Sleek Toast Notification Container -->
+  <div class="toast-stack" id="toast-container" aria-live="polite"></div>
+
+  <!-- Audio Synth & Application Scripts with fallback -->
+  <script src="/static/js/audio.js?v=2.4" onerror="this.onerror=null;this.src='js/audio.js?v=2.4';"></script>
+  <script src="/static/js/app.js?v=2.4" onerror="this.onerror=null;this.src='js/app.js?v=2.4';"></script>
+</body>
+</html>
