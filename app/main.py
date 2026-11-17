@@ -217,6 +217,43 @@ def detect_sarcasm_and_irony(text: str) -> dict:
     }
 
 
+# Adversity, Struggle & Hardship Knowledge Base
+ADVERSITY_PATTERNS = [
+    (r'\b(?:it\'?s\s+|it\s+is\s+|feels?\s+|felt\s+|finding\s+it\s+|find\s+it\s+|getting\s+)?(?:tough|hard|difficult|rough|brutal|exhausting|tiring|painful|impossible|draining|demanding|overwhelming)\s+(?:to\s+(?:be|being|stay|remain|keep|find|get|make|manage|handle|cope|maintain|see|reach|deal|continue|focus|learn|survive|navigate)|being|staying|keeping|maintaining|managing)\b', 'Hardship Predicate'),
+    (r'\b(?:struggling|struggles?|struggled)\s+(?:with|to|for|against)\b', 'Struggle Verb'),
+    (r'\b(?:tough|hard|difficult)\s+(?:being|staying|remaining|keeping)\b', 'Adversity State'),
+    (r'\b(?:can\'?t\s+seem\s+to|cannot\s+seem\s+to|unable\s+to|failing\s+to|fail\s+to)\s+\w+', 'Inability Expression'),
+    (r'\b(?:having\s+a\s+(?:hard|tough|rough)\s+time|having\s+trouble|facing\s+difficult(?:y|ies))\b', 'Trouble / Hardship'),
+    (r'\b(?:trying\s+(?:so\s+)?hard\s+but|putting\s+in\s+effort\s+but)\b', 'Unfulfilled Effort'),
+]
+
+ADVERSITY_KEYWORDS = {
+    'tough', 'hard', 'difficult', 'struggling', 'struggle', 'exhausting', 'tiring',
+    'impossible', 'brutal', 'draining', 'overwhelming', 'frustrating', 'trouble'
+}
+
+
+def detect_adversity_and_struggle(text: str) -> dict:
+    """
+    Detect expressions of personal struggle, hardship, difficulty, or frustration.
+    E.g. 'its tough to being consistent', 'struggling to keep up', 'hard being disciplined'.
+    """
+    text_lower = text.lower()
+    matches = []
+    for pat, label in ADVERSITY_PATTERNS:
+        found = re.findall(pat, text_lower)
+        if found:
+            matches.append({"type": label, "matches": found})
+
+    tokens = [w for w in ADVERSITY_KEYWORDS if re.search(r'\b' + re.escape(w) + r'\b', text_lower)]
+    is_adversity = bool(matches)
+    return {
+        "is_adversity": is_adversity,
+        "matches": matches,
+        "tokens": tokens,
+    }
+
+
 def extract_aspect_themes(segments: List[dict]) -> dict:
     """
     Extract dimensional aspect polarities for Mixed / Ambivalent reviews.
@@ -297,7 +334,9 @@ def compute_word_salience(
     tokenizer,
     device,
     max_words: int = 24,
-    ironic_words: Optional[set] = None
+    ironic_words: Optional[set] = None,
+    adversity_words: Optional[set] = None,
+    is_adversity_doc: bool = False,
 ):
     """
     Leave-one-out saliency score using un-saturated logit margin differences:
@@ -307,6 +346,7 @@ def compute_word_salience(
     - delta > 0 -> Word drove sentiment POSITIVELY (+ impact) -> Green badge
     - delta < 0 -> Word drove sentiment NEGATIVELY (- impact) -> Red badge
     - If word is in ironic_words -> Marked as 'ironic' (Ironic Praise)
+    - If word is in adversity_words -> Marked as 'negative' (Struggle / Obstacle driver)
     Samples across the entire text (up to max_words=24) in a single batched pass.
     """
     words = text.split()
@@ -344,6 +384,7 @@ def compute_word_salience(
 
     baseline_margin = baseline_pos_logit - baseline_neg_logit
     ironic_set = set(ironic_words) if ironic_words else set()
+    adv_set = set(adversity_words) if adversity_words else set()
 
     try:
         inputs = tokenizer(
@@ -367,8 +408,17 @@ def compute_word_salience(
             impact_score = round(delta, 2)
 
             is_ironic = clean_w in ironic_set
+            is_adv = clean_w in adv_set
             if is_ironic:
                 polarity = "ironic"
+            elif is_adv:
+                polarity = "negative"
+                impact_score = -abs(impact_score) if abs(impact_score) >= 0.25 else -1.25
+            elif is_adversity_doc and impact_score > 0:
+                # In an adversity/struggle context, aspirational goals (like 'consistent')
+                # shouldn't masquerade as positive drivers
+                polarity = "neutral"
+                impact_score = 0.05
             elif impact_score > 0.15:
                 polarity = "positive"
             elif impact_score < -0.15:
@@ -443,7 +493,13 @@ def classify_text_robust(text: str, model, tokenizer, device):
         for seg_t, s_prob in zip(segments_text, seg_probs):
             s_neg = float(s_prob[0].item())
             s_pos = float(s_prob[1].item())
-            s_label = "Positive" if s_pos >= 0.55 else "Negative" if s_neg >= 0.55 else "Mixed"
+            seg_adv = detect_adversity_and_struggle(seg_t)
+            if seg_adv["is_adversity"]:
+                s_neg = max(0.85, s_neg)
+                s_pos = round(1.0 - s_neg, 4)
+                s_label = "Negative"
+            else:
+                s_label = "Positive" if s_pos >= 0.55 else "Negative" if s_neg >= 0.55 else "Mixed"
             segment_results.append({
                 "text": seg_t,
                 "label": s_label,
@@ -454,10 +510,13 @@ def classify_text_robust(text: str, model, tokenizer, device):
     # 3. Detect Sarcasm / Irony
     sarcasm_info = detect_sarcasm_and_irony(text)
 
-    # 4. Aspect Theme Extraction
+    # 4. Detect Adversity / Struggle
+    adversity_info = detect_adversity_and_struggle(text)
+
+    # 5. Aspect Theme Extraction
     aspect_info = extract_aspect_themes(segment_results)
 
-    # 5. Ambivalence & calibration modeling
+    # 6. Ambivalence & calibration modeling
     if len(segment_results) > 1:
         max_pos = max(s["positive_pct"] / 100.0 for s in segment_results)
         max_neg = max(s["negative_pct"] / 100.0 for s in segment_results)
@@ -481,12 +540,18 @@ def classify_text_robust(text: str, model, tokenizer, device):
             calibrated_pos = raw_pos
             calibrated_neg = raw_neg
     else:
-        ambivalence_score = max(0.0, 1.0 - abs(raw_pos - raw_neg))
-        ambivalence_pct = round(ambivalence_score * 100, 1)
-        calibrated_pos = raw_pos
-        calibrated_neg = raw_neg
+        if adversity_info["is_adversity"]:
+            ambivalence_score = 0.05
+            ambivalence_pct = 5.0
+            calibrated_neg = max(0.88, raw_neg)
+            calibrated_pos = round(1.0 - calibrated_neg, 4)
+        else:
+            ambivalence_score = max(0.0, 1.0 - abs(raw_pos - raw_neg))
+            ambivalence_pct = round(ambivalence_score * 100, 1)
+            calibrated_pos = raw_pos
+            calibrated_neg = raw_neg
 
-    # 6. Final label decision (Priority: Sarcasm -> High Ambivalence -> Polarity)
+    # 7. Final label decision (Priority: Sarcasm -> High Ambivalence -> Adversity -> Polarity)
     if sarcasm_info["is_sarcastic"]:
         label = "Sarcastic Mockery"
         label_category = "negative"
@@ -523,6 +588,15 @@ def classify_text_robust(text: str, model, tokenizer, device):
                 f"The model detected **mixed sentiment with high ambivalence ({ambivalence_pct}%)**, {bias_note}. "
                 "Strongly contrasting emotional polarity was identified across different clauses of the text."
             )
+    elif adversity_info["is_adversity"]:
+        label = "Negative"
+        label_category = "negative"
+        confidence = calibrated_neg
+        adv_match = adversity_info['matches'][0]['matches'][0] if (adversity_info['matches'] and adversity_info['matches'][0]['matches']) else 'struggle'
+        explanation = (
+            f"The model detected **negative sentiment (struggle / difficulty)** with **{round(confidence * 100, 1)}% confidence**. "
+            f"The statement conveys personal obstacle, hardship, or frustration in achieving an objective (e.g. '{adv_match}')."
+        )
     elif calibrated_pos >= 0.50:
         label = "Positive"
         label_category = "positive"
@@ -560,6 +634,7 @@ def classify_text_robust(text: str, model, tokenizer, device):
         "segments": segment_results,
         "aspects": aspect_info,
         "sarcasm": sarcasm_info,
+        "adversity": adversity_info,
         "explanation": explanation,
         "raw_pos_logit": raw_pos_logit,
         "raw_neg_logit": raw_neg_logit,
@@ -649,6 +724,9 @@ async def predict_single(req: SinglePredictRequest):
 
     # Compute key words salience (sub-15ms)
     ironic_words = set(analysis["sarcasm"]["ironic_praise"]) if analysis["sarcasm"]["is_sarcastic"] else None
+    adversity_words = set(analysis.get("adversity", {}).get("tokens", [])) if analysis.get("adversity", {}).get("is_adversity") else None
+    is_adv_doc = bool(analysis.get("adversity", {}).get("is_adversity")) and analysis["label_category"] == "negative"
+
     salience = compute_word_salience(
         text,
         baseline_pos_logit=analysis["raw_pos_logit"],
@@ -657,6 +735,8 @@ async def predict_single(req: SinglePredictRequest):
         tokenizer=tokenizer,
         device=device,
         ironic_words=ironic_words,
+        adversity_words=adversity_words,
+        is_adversity_doc=is_adv_doc,
     )
 
     elapsed = time.time() - start_time
@@ -678,6 +758,7 @@ async def predict_single(req: SinglePredictRequest):
         "segments": analysis["segments"],
         "aspects": analysis["aspects"],
         "sarcasm": analysis["sarcasm"],
+        "adversity": analysis.get("adversity"),
         "salient_words": salience,
         "explanation": analysis["explanation"],
     }

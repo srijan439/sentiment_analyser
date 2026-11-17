@@ -38,3 +38,18 @@ def test_sarcasm_and_mixed_logic_present_in_backend():
     assert "extract_aspect_themes" in main_code
     assert "SARCASM_DISCOURSE_PATTERNS" in main_code
     assert "split_into_clauses_and_sentences" in main_code
+    assert "detect_adversity_and_struggle" in main_code
+    assert "ADVERSITY_PATTERNS" in main_code
+
+
+def test_adversity_detection_logic():
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from app.main import detect_adversity_and_struggle
+    res = detect_adversity_and_struggle("its tough to being consistent.")
+    assert res["is_adversity"] is True
+    assert "tough" in res["tokens"]
+
+    res_pos = detect_adversity_and_struggle("This is an absolute masterpiece.")
+    assert res_pos["is_adversity"] is False
+
